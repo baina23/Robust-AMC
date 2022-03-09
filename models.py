@@ -99,3 +99,36 @@ class RNN(nn.Module) :
 
         out = self.classifier(out)
         return out
+    
+    
+class AUTOENCODER(nn.Module):
+    def __init__(self):
+        super(AUTOENCODER,self).__init__()
+        self.conv_1 = nn.Conv2d(in_channels = 1, out_channels = 64, kernel_size = (3，3))
+        self.conv_2 = nn.Conv2d(in_channels = 64, out_channels = 32, kernel_size = (3，3))        
+        self.conv_3 = nn.Conv2d(in_channels = 32, out_channels = 16, kernel_size = (3，3))
+        self.conv_4 = nn.Conv2d(in_channels = 16, out_channels = 32, kernel_size = (3，3))
+        self.conv_5 = nn.Conv2d(in_channels = 32, out_channels = 64, kernel_size = (3，3))
+        self.conv_6 = nn.Conv2d(in_channels = 64, out_channels = 1, kernel_size = (3，3))
+    
+    def forward(self, x):
+        out = self.conv_1(x)
+        out = self.conv_2(x)
+        out = self.conv_3(x)
+        out = self.conv_4(x)
+        out = self.conv_5(x)
+        out = self.conv_6(x)
+        return out
+
+
+
+
+
+
+
+
+
+
+
+
+
