@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 import datetime
 import warnings
+import argparse
 import os, random
 warnings.filterwarnings("ignore")
 
@@ -17,6 +18,13 @@ import torch.nn.functional as F
 from models import AUTOENCODER
 from torch.utils.data import DataLoader, TensorDataset
 from utilities import *
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gpu", help="index of gpu", type=int, default=-1)
+    return parser.parse_args()
+
+os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Current Device: ", device)
