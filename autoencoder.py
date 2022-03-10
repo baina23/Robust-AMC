@@ -48,7 +48,8 @@ TestLoader  = DataLoader(test_dataset,  batch_size = batch_size,
                          shuffle = False)
 num_epochs = 100
 criterion  = nn.MSELoss()
-optimizer  = optim.SGD(model.parameters(), lr = 0.001)
+optimizer  = optim.SGD(model.parameters(), lr = 0.6, momentum = 0.9)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
 best_val_loss = 1.
 
@@ -63,17 +64,14 @@ for epoch in range(num_epochs) :
         optimizer.zero_grad()
         outputs = model(data)
         loss    = criterion(outputs, lbs)
-        #acc     = evaluate_accuracy(outputs, lbs)
         loss.backward()
         optimizer.step()
         
         train_epoch_loss += loss.item()
-        #train_epoch_acc  += acc.item()
     
     with torch.no_grad() :
         model.eval()
         val_epoch_loss = 0.
-        #val_epoch_acc  = 0.
         
         for X_val_batch, y_val_batch in TestLoader :
             X_val_batch = X_val_batch.to(device)
@@ -82,15 +80,12 @@ for epoch in range(num_epochs) :
             y_val_pred = model(X_val_batch)
             
             val_loss = criterion(y_val_pred, y_val_batch)
-            #val_acc  = evaluate_accuracy(y_val_pred, y_val_batch)
             
             val_epoch_loss += val_loss.item()
-            #val_epoch_acc  += val_acc.item()
     
     avg_train_loss = float(train_epoch_loss) / len(TrainLoader)
-    #avg_train_acc  = float(train_epoch_acc) / len(TrainLoader)
     avg_val_loss   = float(val_epoch_loss) / len(TestLoader)
-    #avg_val_acc    = float(val_epoch_acc) / len(TestLoader)
+    scheduler.step(avg_val_loss)
     
     print(f'Epoch {epoch+1}: | Train Loss: {avg_train_loss:.4e} | Test Loss: {avg_val_loss:.4e}')
     
