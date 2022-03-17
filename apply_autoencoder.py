@@ -20,11 +20,13 @@ from torch.utils.data import DataLoader, TensorDataset
 from utilities import *
 from attacks import *
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "8"
 # EPS for FGSM attack
 curr_attack = "FGSM_Linfinity"
-eps_values = np.array([0.001, 0.004, 0.009, 0.012, 0.017, 0.022, 
-                       0.024, 0.027, 0.030])
+eps_values = np.array([0.001, 0.002, 0.003, 0.005, 0.007, 0.010, 0.012, 0.017, 0.022, 
+                        0.027, 0.030])
+#eps_values = np.array([0.000, 0.001, 0.002, 0.003, 0.005, 0.007, 
+#                       0.010, 0.020, 0.030])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Current Device: ", device)
@@ -40,8 +42,6 @@ test_dataset  = TensorDataset(x_test,  y_test.type(torch.LongTensor))
 batch_size = 256
 TrainLoader = DataLoader(train_dataset, batch_size = batch_size, 
                          shuffle = False)
-TestLoader  = DataLoader(test_dataset,  batch_size = batch_size, 
-                         shuffle = False)
 
 model = CNN(input_size = 128)
 model.load_state_dict(torch.load("CNN_base.pt"))
@@ -53,7 +53,9 @@ criterion  = nn.MSELoss()
 
 T = 0
 T_array = []
-for eps in eps_values:
+
+eps_values_T = np.array([0.001, 0.003, 0.005, 0.008, 0.012])
+for eps in eps_values_T:
     for batch_idx, (data, lbs) in enumerate(TrainLoader) :
         data = data.to(device)
         lbs = lbs.to(device)
@@ -66,11 +68,16 @@ for eps in eps_values:
     T_array.append(T)
 print(T_array)
     
+
+batch_size = 4
+TestLoader  = DataLoader(test_dataset,  batch_size = batch_size, 
+                         shuffle = False)
 encoder.eval()
 dtct_rate = []
-T = torch.mean(T_array)
+#T = torch.mean(torch.stack(T_array))
+
 for i in range(len(eps_values)) :
-    detect_num = 0
+    detect_num = np.zeros(len(T_array))
     all_num = 0
     for X_val_batch, y_val_batch in TestLoader :
         X_val_batch = X_val_batch.to(device)
@@ -80,11 +87,13 @@ for i in range(len(eps_values)) :
         adv_x_pred = encoder(adv_x)
         val_loss = criterion(adv_x_pred, adv_x)
 
-        if val_loss >= T:
-            detect_num += 1
+        for m in range(len(T_array)):
+            if val_loss >= T_array[m]:
+                detect_num[m] += 1
         all_num += 1
-    
-    detection_rate = float(detect_num) / float(all_num)  
+        
+    d_sum = np.sum(detect_num)
+    detection_rate = float(d_sum) / (len(T_array)*float(all_num))  
     print(f'eps value {eps_values[i]}: Detection rate: {detection_rate:.3f}')   
     dtct_rate.append(detection_rate)
 
