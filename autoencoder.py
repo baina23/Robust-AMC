@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("--gpu", help="index of gpu", type=str, default=-1)
     return parser.parse_args()
 args = parse_args()
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Current Device: ", device)
@@ -35,9 +35,11 @@ snrs, mods, X, labels = process_data(filename)
 
 model = AUTOENCODER()
 model.to(device)
-model_checkpoint = "AUTOENCODER.pt"
+model_checkpoint = "AUTOENCODER_sub12.pt"
 
 x_train, x_test, y_train, y_test, test_labels, test_idx = train_test_split(X, labels, mods)
+x_train = x_train[:,:,:,::2]
+x_test = x_test[:,:,:,::2]
 
 train_dataset = TensorDataset(x_train, x_train)
 test_dataset  = TensorDataset(x_test,  x_test)
